@@ -1,0 +1,15 @@
+gevent
+gevent-openssl
+greenlet
+impacket
+parallel-ssh
+pycryptodome
+PyInstaller
+pymongo
+PyMySQL
+pyOpenSSL
+python-binary-memcached
+redis
+requests
+bs4
+ipaddr
