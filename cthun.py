@@ -30,32 +30,6 @@ def group_numbers(lst):
     return templist
 
 
-def get_ipaddresses(raw_lines):
-    ipaddress_list = []
-    for line in raw_lines:
-        if '-' in line:
-            try:
-                startip = line.split("-")[0]
-                endip = line.split("-")[1]
-                ipnetwork_list = summarize_address_range(IPv4Address(startip), IPv4Address(endip))
-                for ipnetwork in ipnetwork_list:
-                    for ip in ipnetwork:
-                        if ip.compressed not in ipaddress_list:
-                            ipaddress_list.append(ip.compressed)
-            except Exception as E:
-                print(E)
-        else:
-            try:
-                ipnetwork = IPv4Network(line)
-                for ip in ipnetwork:
-                    if ip.compressed not in ipaddress_list:
-                        ipaddress_list.append(ip.compressed)
-            except Exception as E:
-                print(E)
-
-    return ipaddress_list
-
-
 def calc_ipaddresses(raw_input):
     if raw_input is None:
         return []
@@ -194,7 +168,7 @@ if __name__ == '__main__':
                         help="Portscan ipaddress.(e.g. 192.168.146.1-255,192.168.146.1/24,ip.txt)",
                         )
 
-    parser.add_argument('-ps-port', '--portscan-ports',
+    parser.add_argument('-ps-p', '--portscan-ports',
                         default=None,
                         metavar='STR',
                         type=str,
@@ -220,19 +194,11 @@ if __name__ == '__main__':
                         help="Netbiosscan ipaddress.(e.g. 192.168.146.1-255,192.168.146.1/24,ip.txt)",
                         )
 
-    parser.add_argument('-hs', '--httpscan',
-                        default=False,
-                        nargs='?',
-                        metavar="true",
-                        type=bool,
-                        help="Run httpscan",
-                        )
-
     parser.add_argument('-hs-ipport', '--httpscan-ipaddress-ports',
                         default=None,
                         metavar='STR',
                         type=str,
-                        help="Httpscan ip:port.(e.g. 192.168.146.1/24:8009,192.168.146.1-255:80,ipport.txt)",
+                        help="Httpscan ip:port or set 'ps' to  use portscan result.(e.g. 192.168.146.1/24:8009,192.168.146.1-255:80,ipport.txt)",
                         )
 
     parser.add_argument('-hs-url', '--httpscan-url',
@@ -305,19 +271,12 @@ if __name__ == '__main__':
                         type=str,
                         help="Bruteforce memcached ip:port or set 'ps' to  use portscan result.(e.g. 192.168.146.1/24:11211,192.168.146.1-255:11211,ipport.txt)",
                         )
+
     parser.add_argument('-bf-vnc', '--bruteforce-vnc',
                         default=None,
                         metavar='STR',
                         type=str,
                         help="Bruteforce vnc ip:port or set 'ps' to  use portscan result.(e.g. 192.168.146.1/24:5900,192.168.146.1-255:5900,ipport.txt)",
-                        )
-
-    parser.add_argument('-bf-dd', '--bruteforce-defaultdict',
-                        default=False,
-                        nargs='?',
-                        metavar="true",
-                        type=bool,
-                        help="Run bruteforce with built in dictionary",
                         )
 
     parser.add_argument('-bf-u', '--bruteforce-users',
@@ -348,6 +307,14 @@ if __name__ == '__main__':
                         help="Bruteforce sshkeys.(e.g. id_rsa)",
                         )
 
+    parser.add_argument('-bf-dd', '--bruteforce-defaultdict',
+                        default=False,
+                        nargs='?',
+                        metavar="true",
+                        type=bool,
+                        help="Run bruteforce with built in dictionary",
+                        )
+
     parser.add_argument('-vs', '--vulscan',
                         default=False,
                         nargs='?',
@@ -372,13 +339,13 @@ if __name__ == '__main__':
     parser.add_argument('-ms', '--maxsocket',
                         metavar='N',
                         help='Maximum number of network connections(e.g. 300).',
-                        default=300,
+                        default=100,
                         type=int)
 
     parser.add_argument('-st', '--sockettimeout',
                         metavar='N',
                         help='Socket Timeout(second)(e.g. 0.2)',
-                        default=0.2,
+                        default=0.1,
                         type=float)
 
     parser.add_argument('-lh', '--loadhistory',
@@ -458,6 +425,7 @@ if __name__ == '__main__':
     pool = Pool(max_socket_count)
 
     # 检查是否需要进行portscan
+    # 检查是否需要进行portscan
     portscan = False
     portscan_ipaddress = args.portscan_ipaddress
     portscan_ports = args.portscan_ports
@@ -533,9 +501,10 @@ if __name__ == '__main__':
         geventScanner = GeventScanner(max_socket_count=max_socket_count, timeout=timeout, retry=portscan_retry)
         portScan_result_list = geventScanner.aysnc_main(ip_list, port_list, pool)
         t2 = time.time()
-        logger.info("PortScan finish,time use : {}s".format(t2 - t1))
+        logger.info("PortScan finish,time use : {}s".format(format(t2 - t1, '.2f')))
         logger.info("----------------- PortScan Finish --------------------")
 
+    # 检查是否需要进行netbiosscan
     # 检查是否需要进行netbiosscan
     netbiosscan = False
     netbiosscan_ipaddress = args.netbiosscan_ipaddress
@@ -566,11 +535,12 @@ if __name__ == '__main__':
 
         netbios_interface(ip_list, timeout, pool)
         t4 = time.time()
-        logger.info("Netbios Scan finish,time use : {} s".format(t4 - t3))
+        logger.info("Netbios Scan finish,time use : {} s".format(format(t4 - t3, '.2f')))
         logger.info("----------------- Netbios Scan Finish ---------------------")
 
     # 检查是否需要进行httpscan
-    httpscan = args.httpscan
+    # 检查是否需要进行httpscan
+    httpscan = False
     httpscan_ipaddress_ports = args.httpscan_ipaddress_ports
     httpscan_url = args.httpscan_url
 
@@ -584,7 +554,7 @@ if __name__ == '__main__':
             portScan_result_list.extend(manly_input_result)
         httpscan = True
     else:
-        if httpscan is not False:
+        if httpscan_ipaddress_ports is not None:
             if portScan_result_list:
                 httpscan = True
             else:
@@ -606,9 +576,10 @@ if __name__ == '__main__':
 
         http_interface(portScan_result_list, timeout, pool, flagurl)
         t4 = time.time()
-        logger.info("HttpCheck finish,time use : {}s".format(t4 - t3))
+        logger.info("HttpCheck finish,time use : {}s".format(format(t4 - t3, '.2f')))
         logger.info("----------------- HttpCheck Finish ---------------------")
 
+    # 检查是否需要进行bruteforce
     # 检查是否需要进行bruteforce
     bruteforce = args.bruteforce
 
@@ -706,7 +677,6 @@ if __name__ == '__main__':
         if bruteforce_users is not None:
             raw_lines = bruteforce_users.split(",")
             for line in raw_lines:
-                # 是否是文件
                 try:
                     with open(line, "r") as f:
                         for fileline in f.readlines():
@@ -717,7 +687,6 @@ if __name__ == '__main__':
         if bruteforce_passwords is not None:
             raw_lines = bruteforce_passwords.split(",")
             for line in raw_lines:
-                # 是否是文件
                 try:
                     with open(line, "r") as f:
                         for fileline in f.readlines():
@@ -775,7 +744,7 @@ if __name__ == '__main__':
             ssh_keys=sshkeys,
         )
         t3 = time.time()
-        logger.info("BruteForce finish,time use : {} s".format(t3 - t2))
+        logger.info("BruteForce finish,time use : {} s".format(format(t3 - t2, '.2f')))
         logger.info("----------------- BruteForce Finish --------------------")
 
     # 检查是否需要进行vulscan
@@ -825,7 +794,7 @@ if __name__ == '__main__':
 
         vulscan_interface(portScan_result_list=portScan_result_list, timeout=timeout, pool=pool)
         t4 = time.time()
-        logger.info("Vulscan Scan finish,time use : {}s".format(t4 - t3))
+        logger.info("Vulscan Scan finish,time use : {}s".format(format(t4 - t3, '.2f')))
         logger.info("----------------- VulScan Finish --------------------")
 
     logger.info("----------------- Progrem Finish -----------------------\n\n")
@@ -835,4 +804,3 @@ if __name__ == '__main__':
         write_finish_flag()
     except Exception as e:
         print(e)
-        pass

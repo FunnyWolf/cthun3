@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['cthun.py'],
-             pathex=['/root/CThun'],
+             pathex=['/root/cthun3'],
              binaries=[],
              datas=[],
              hiddenimports=[

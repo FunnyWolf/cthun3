@@ -11,7 +11,11 @@ import json
 import threading
 import time
 from ftplib import FTP
-from queue import Queue
+
+try:
+    from Queue import Queue
+except Exception as E:
+    from queue import Queue
 
 from bruteforce.password import Password_total
 from lib.config import logger, log_success

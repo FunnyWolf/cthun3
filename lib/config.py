@@ -18,11 +18,6 @@ logfilepath = os.path.join(work_path, logfilename)
 ipportservicelogfilename = "ipportservice.log"
 ipportservicelogfilepath = os.path.join(work_path, ipportservicelogfilename)
 
-debug = True
-if debug:
-    logfilepath = os.path.join(work_path, "release", logfilename)
-    ipportservicelogfilepath = os.path.join(work_path, "release", ipportservicelogfilename)
-
 logconfig = {
     'version': 1,
     'formatters': {
