@@ -128,7 +128,7 @@ funnywolf
 ### -bf-p
 暴力破解密码字典,
 ```
--bf-u   1234qwer!@#$,root,foobared,password.txt
+-bf-p   1234qwer!@#$,root,foobared,password.txt
 ```
 password.txt文件内容格式
 ```
